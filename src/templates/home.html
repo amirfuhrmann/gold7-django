@@ -15,11 +15,11 @@
         <p class="text-sm text-gray-500 mb-3">Browse the interactive API documentation.</p>
         <a href="/api/v1/docs/" class="text-primary text-sm font-medium">Open API docs →</a>
       </div>
-      {% if user.is_staff %}
+      {% if user.is_superuser %}
         <div class="rounded-lg border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface p-5">
           <h2 class="font-medium mb-1">Administration</h2>
           <p class="text-sm text-gray-500 mb-3">Manage users and send invitations.</p>
-          <a href="/{{ ADMIN_URL }}" class="text-primary text-sm font-medium">Open admin →</a>
+          <a href="/{{ ADMIN_URL }}" target="_blank" rel="noopener" class="text-primary text-sm font-medium">Open admin →</a>
         </div>
       {% endif %}
     </div>

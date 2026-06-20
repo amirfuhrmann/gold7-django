@@ -28,7 +28,7 @@
       <header class="flex items-center justify-between h-16 px-6 bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border">
         <a href="/" class="text-lg font-semibold">{{ PLATFORM_NAME }}</a>
         <nav class="flex items-center gap-4 text-sm">
-          {% if user.is_staff %}<a href="/{{ ADMIN_URL }}" class="text-gray-600 dark:text-gray-300 hover:text-primary">Admin</a>{% endif %}
+          {% if user.is_superuser %}<a href="/{{ ADMIN_URL }}" target="_blank" rel="noopener" class="text-gray-600 dark:text-gray-300 hover:text-primary">Admin</a>{% endif %}
           <a href="/api/v1/docs/" class="text-gray-600 dark:text-gray-300 hover:text-primary">API</a>
           <span class="text-gray-500">{{ user.name|default:user.email }}</span>
           <a href="{% url 'account:logout' %}" class="btn-primary">Sign out</a>
