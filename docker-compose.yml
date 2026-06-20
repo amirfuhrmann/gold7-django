@@ -1,0 +1,183 @@
+# Docker Compose for Local Development
+# Usage: docker compose up
+
+# Pin the project name so it doesn't shift if the repo directory is
+# renamed. Matches the project name used on production so the named
+# volumes carry the same com.docker.compose.project label across
+# environments.
+name: gold7
+
+x-env-files: &env-files
+  env_file:
+    - .env
+    - path: .env.secrets
+      required: false
+
+services:
+  # PostgreSQL Database (with TimescaleDB extension)
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: gold7_postgres
+    shm_size: 256m
+    command: ["postgres", "-c", "log_min_messages=FATAL"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/init-timescaledb.sql:/docker-entrypoint-initdb.d/01-timescale.sql:ro
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gold7}
+      POSTGRES_USER: ${POSTGRES_USER:-gold7}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gold7}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gold7}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  # Redis Cache & Celery Broker
+  redis:
+    image: redis:7-bookworm
+    container_name: gold7_redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  # Django Web Application
+  web:
+    <<: *env-files
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: local
+    container_name: gold7_web
+    command: watchfiles --filter python 'python manage.py runserver --noreload 0.0.0.0:8000'
+    volumes:
+      - ./src:/app:consistent
+      - media_volume:/app/media
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - DJANGO_DEBUG=True
+      - DATABASE_URL=postgres://${POSTGRES_USER:-gold7}:${POSTGRES_PASSWORD:-gold7}@db:5432/${POSTGRES_DB:-gold7}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_MIGRATE=true
+      - DJANGO_BUILD_CSS=true
+      - DJANGO_COLLECTSTATIC=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  # Celery Worker (with auto-reload)
+  celery_worker:
+    <<: *env-files
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: local
+    container_name: gold7_celery_worker
+    command: watchfiles --filter python 'celery -A config worker --loglevel=info --concurrency=1'
+    volumes:
+      - ./src:/app:consistent
+      - media_volume:/app/media
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - DJANGO_DEBUG=True
+      - DATABASE_URL=postgres://${POSTGRES_USER:-gold7}:${POSTGRES_PASSWORD:-gold7}@db:5432/${POSTGRES_DB:-gold7}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_MIGRATE=wait
+      - DJANGO_COLLECTSTATIC=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping --timeout 10 2>/dev/null | grep -q OK"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  # Celery Beat Scheduler (with auto-reload)
+  celery_beat:
+    <<: *env-files
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: local
+    container_name: gold7_celery_beat
+    command: watchfiles --filter python 'celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    volumes:
+      - ./src:/app:consistent
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - DJANGO_DEBUG=True
+      - DATABASE_URL=postgres://${POSTGRES_USER:-gold7}:${POSTGRES_PASSWORD:-gold7}@db:5432/${POSTGRES_DB:-gold7}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_MIGRATE=wait
+      - DJANGO_COLLECTSTATIC=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'celery.*beat' >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+volumes:
+  postgres_data:
+    name: gold7_postgres_data
+  redis_data:
+    name: gold7_redis_data
+  media_volume:
+    name: gold7_media
+
+networks:
+  gold7_network:
+    name: gold7_network
+    driver: bridge

@@ -1,0 +1,16 @@
+{
+  "name": "gold7",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "@tailwindcss/typography": "^0.5.16",
+    "tailwindcss": "^4.1.17"
+  },
+  "scripts": {
+    "css:build": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/tailwind.css --minify",
+    "css:watch": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/tailwind.css --watch",
+    "css:dev": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/tailwind.css"
+  }
+}

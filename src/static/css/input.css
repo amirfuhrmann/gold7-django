@@ -1,0 +1,47 @@
+/**
+ * Tailwind CSS v4 — Gold7 theme.
+ *
+ * Built to ./static/css/tailwind.css via `npm run css:build`.
+ */
+
+@import "tailwindcss";
+
+/* Tailwind Typography plugin */
+@plugin "@tailwindcss/typography";
+
+/* Class-based dark mode (toggled by the inline script in base.html) */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand palette — Gold7 */
+  --color-primary: #b8860b;
+  --color-primary-hover: #9a7209;
+  --color-secondary: #6b7280;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
+  --color-info: #0891b2;
+
+  /* Dark mode surfaces */
+  --color-dark-bg: #111827;
+  --color-dark-surface: #1f2937;
+  --color-dark-surface-elevated: #374151;
+  --color-dark-border: #4b5563;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Shared form control style used by Django widgets (class="form-input"). */
+@layer components {
+  .form-input {
+    @apply block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900
+           shadow-sm placeholder:text-gray-400
+           focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary
+           dark:border-dark-border dark:bg-dark-surface dark:text-gray-100;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium
+           text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+}

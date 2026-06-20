@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{{ PLATFORM_NAME }}{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
+  {% block extra_css %}{% endblock %}
+  <script>
+    (function () {
+      var theme = '{{ user.preferred_theme|default:"system" }}';
+      if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="h-full bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-gray-100">
+  {% if ENVIRONMENT_NAME %}
+    <div class="fixed top-0 inset-x-0 z-50 bg-yellow-500 text-white text-center text-xs py-1 font-medium">
+      {{ ENVIRONMENT_NAME }} Environment
+    </div>
+  {% endif %}
+
+  {% block body %}
+    {% if user.is_authenticated %}
+      <header class="flex items-center justify-between h-16 px-6 bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border">
+        <a href="/" class="text-lg font-semibold">{{ PLATFORM_NAME }}</a>
+        <nav class="flex items-center gap-4 text-sm">
+          {% if user.is_staff %}<a href="/{{ ADMIN_URL }}" class="text-gray-600 dark:text-gray-300 hover:text-primary">Admin</a>{% endif %}
+          <a href="/api/v1/docs/" class="text-gray-600 dark:text-gray-300 hover:text-primary">API</a>
+          <span class="text-gray-500">{{ user.name|default:user.email }}</span>
+          <a href="{% url 'account:logout' %}" class="btn-primary">Sign out</a>
+        </nav>
+      </header>
+    {% endif %}
+
+    <main class="{% if user.is_authenticated %}p-6{% endif %}">
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="rounded-md px-4 py-2 text-sm bg-gray-100 dark:bg-dark-surface-elevated">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  {% endblock %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

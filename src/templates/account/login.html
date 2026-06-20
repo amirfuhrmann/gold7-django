@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in — {{ PLATFORM_NAME }}</title>
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
+</head>
+<body class="h-full bg-gray-100 dark:bg-dark-bg flex items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-xl bg-white dark:bg-dark-surface shadow-sm border border-gray-200 dark:border-dark-border p-8">
+    <h1 class="text-xl font-semibold text-center mb-1">{{ PLATFORM_NAME }}</h1>
+    <p class="text-sm text-gray-500 text-center mb-6">Sign in to continue</p>
+
+    {% if error %}
+      <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label for="identifier" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+          Email or phone number
+        </label>
+        <input id="identifier" name="identifier" type="text" autocomplete="username" required
+               class="form-input" placeholder="you@example.com" autofocus />
+      </div>
+      <div>
+        <label for="password" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+          Password
+        </label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required
+               class="form-input" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn-primary w-full">Sign in</button>
+    </form>
+  </div>
+</body>
+</html>

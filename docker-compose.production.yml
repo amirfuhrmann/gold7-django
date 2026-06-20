@@ -1,0 +1,126 @@
+# Docker Compose for Production
+#
+# Pulls pre-built images from the container registry (built by CI on the
+# `deploy` branch) instead of building locally. CSS and collectstatic run
+# at image build time, so no Node tooling is needed at runtime.
+#
+# Usage: docker compose -f docker-compose.production.yml up -d
+
+name: gold7
+
+x-image: &image ${GOLD7_IMAGE:-ghcr.io/REPLACE_ME/gold7:latest}
+
+x-env-files: &env-files
+  env_file:
+    - .env
+    - path: .env.secrets
+      required: false
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: gold7_postgres
+    shm_size: 256m
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/init-timescaledb.sql:/docker-entrypoint-initdb.d/01-timescale.sql:ro
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gold7}
+      POSTGRES_USER: ${POSTGRES_USER:-gold7}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gold7}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  redis:
+    image: redis:7-bookworm
+    container_name: gold7_redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  web:
+    <<: *env-files
+    image: *image
+    container_name: gold7_web
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_MIGRATE=true
+      - DJANGO_COLLECTSTATIC=true
+    volumes:
+      - media_volume:/app/media
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  celery_worker:
+    <<: *env-files
+    image: *image
+    container_name: gold7_celery_worker
+    command: celery -A config worker --loglevel=info
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_MIGRATE=wait
+    volumes:
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+  celery_beat:
+    <<: *env-files
+    image: *image
+    container_name: gold7_celery_beat
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_MIGRATE=wait
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - gold7_network
+
+volumes:
+  postgres_data:
+    name: gold7_postgres_data
+  redis_data:
+    name: gold7_redis_data
+  media_volume:
+    name: gold7_media
+
+networks:
+  gold7_network:
+    name: gold7_network
+    driver: bridge

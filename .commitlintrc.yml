@@ -1,0 +1,45 @@
+extends:
+  - '@commitlint/config-conventional'
+
+rules:
+  # Allowed commit types
+  type-enum:
+    - 2
+    - always
+    - - feat      # New feature
+      - fix       # Bug fix
+      - docs      # Documentation only
+      - style     # Formatting, missing semi colons, etc
+      - refactor  # Code change that neither fixes a bug nor adds a feature
+      - perf      # Performance improvement
+      - test      # Adding missing tests
+      - build     # Changes to build process
+      - ci        # CI configuration changes
+      - chore     # Maintenance tasks
+      - revert    # Revert previous commit
+
+  # Disable subject-case to allow acronyms (API, UUID, JWT, etc.)
+  subject-case:
+    - 0
+
+  # Max header length
+  header-max-length:
+    - 2
+    - always
+    - 100
+
+  # Body max line length
+  body-max-line-length:
+    - 2
+    - always
+    - 200
+
+  # Type must not be empty
+  type-empty:
+    - 1
+    - never
+
+  # Subject must not be empty
+  subject-empty:
+    - 1
+    - never

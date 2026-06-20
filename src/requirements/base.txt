@@ -1,0 +1,30 @@
+setuptools>=70.0.0
+python-slugify==8.0.4
+whitenoise==6.9.0
+Pillow==11.3.0
+argon2-cffi==25.1.0
+redis==6.2.0
+hiredis==3.2.1
+
+# Database
+psycopg[binary]==3.2.4
+
+# Django
+django==5.1.11
+django-environ==0.12.0
+django-model-utils==5.0.0
+django-redis==6.0.0
+django-extensions==4.1
+django-template-partials==24.4
+
+# Task Queue
+celery==5.4.0
+django-celery-beat==2.7.0
+kombu==5.4.2
+
+# API
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.5.1
+django-filter==23.5
+django-cors-headers==4.3.1
+drf-spectacular==0.28.0

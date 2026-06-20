@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invitation unavailable — {{ PLATFORM_NAME }}</title>
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
+</head>
+<body class="h-full bg-gray-100 dark:bg-dark-bg flex items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-xl bg-white dark:bg-dark-surface shadow-sm border border-gray-200 dark:border-dark-border p-8 text-center">
+    <h1 class="text-xl font-semibold mb-2">Invitation {{ reason }}</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      This invitation link is no longer valid. Please ask an administrator to send a new one.
+    </p>
+    <a href="{% url 'account:login' %}" class="text-primary text-sm font-medium">Go to sign in →</a>
+  </div>
+</body>
+</html>

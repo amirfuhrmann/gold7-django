@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ PLATFORM_NAME }}{% endblock %}
+
+{% block content %}
+  <div class="max-w-3xl">
+    <h1 class="text-2xl font-semibold mb-2">Welcome to {{ PLATFORM_NAME }}</h1>
+    <p class="text-gray-600 dark:text-gray-300 mb-6">
+      You're signed in as <strong>{{ user.name|default:user.email }}</strong>.
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="rounded-lg border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface p-5">
+        <h2 class="font-medium mb-1">REST API</h2>
+        <p class="text-sm text-gray-500 mb-3">Browse the interactive API documentation.</p>
+        <a href="/api/v1/docs/" class="text-primary text-sm font-medium">Open API docs →</a>
+      </div>
+      {% if user.is_staff %}
+        <div class="rounded-lg border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface p-5">
+          <h2 class="font-medium mb-1">Administration</h2>
+          <p class="text-sm text-gray-500 mb-3">Manage users and send invitations.</p>
+          <a href="/{{ ADMIN_URL }}" class="text-primary text-sm font-medium">Open admin →</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="mt-8 text-xs text-gray-400">Version {{ APP_VERSION }}</p>
+  </div>
+{% endblock %}
