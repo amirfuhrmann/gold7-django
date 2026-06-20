@@ -1,17 +1,51 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
+
+from .forms import ProfileForm
+from .forms import StyledPasswordChangeForm
 
 
 @login_required
 def home_view(request):
     """Authenticated dashboard landing page."""
     return render(request, "home.html", {})
+
+
+@login_required
+def profile_view(request):
+    """Let the signed-in user edit ancillary details and change their password."""
+    user = request.user
+    profile_form = ProfileForm(instance=user)
+    password_form = StyledPasswordChangeForm(user)
+
+    if request.method == "POST":
+        if "update_profile" in request.POST:
+            profile_form = ProfileForm(request.POST, instance=user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Profile updated.")
+                return redirect("core:profile")
+        elif "change_password" in request.POST:
+            password_form = StyledPasswordChangeForm(user, request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                # Keep the user signed in after the password hash changes.
+                update_session_auth_hash(request, user)
+                messages.success(request, "Password changed.")
+                return redirect("core:profile")
+
+    return render(request, "profile.html", {
+        "profile_form": profile_form,
+        "password_form": password_form,
+    })
 
 
 def login_view(request):

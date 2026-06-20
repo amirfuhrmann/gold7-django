@@ -30,7 +30,7 @@
         <nav class="flex items-center gap-4 text-sm">
           {% if user.is_superuser %}<a href="/{{ ADMIN_URL }}" target="_blank" rel="noopener" class="text-gray-600 dark:text-gray-300 hover:text-primary">Admin</a>{% endif %}
           <a href="/api/v1/docs/" class="text-gray-600 dark:text-gray-300 hover:text-primary">API</a>
-          <span class="text-gray-500">{{ user.name|default:user.email }}</span>
+          <a href="{% url 'core:profile' %}" class="text-gray-600 dark:text-gray-300 hover:text-primary">{{ user.name|default:user.email }}</a>
           <a href="{% url 'account:logout' %}" class="btn-primary">Sign out</a>
         </nav>
       </header>

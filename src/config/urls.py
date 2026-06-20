@@ -19,6 +19,8 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     # Dashboard
     path("", home_view, name="home"),
+    # Core app (profile, etc.)
+    path("", include("core.urls", namespace="core")),
     # Account (login/logout/invitation acceptance)
     path("account/", include("core.account_urls", namespace="account")),
     # REST API (DRF router + JWT + OpenAPI)
