@@ -69,7 +69,7 @@ services:
       - ./src:/app:consistent
       - media_volume:/app/media
     ports:
-      - "${WEB_PORT:-8000}:8000"
+      - "${WEB_PORT:-7777}:8000"
     environment:
       - WATCHFILES_FORCE_POLLING=true
       - DJANGO_SETTINGS_MODULE=config.settings.docker

@@ -63,7 +63,7 @@ build:
 up:
 	docker compose up -d
 	@echo "Services started"
-	@echo "Web: http://localhost:8000"
+	@echo "Web: http://localhost:7777"
 
 down:
 	docker compose down

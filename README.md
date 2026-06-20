@@ -21,10 +21,10 @@ make up         # start all services
 
 Then open:
 
-- App: <http://localhost:8000>
-- API docs: <http://localhost:8000/api/v1/docs/>
-- Django admin: <http://localhost:8000/admin/>
-- Health check: <http://localhost:8000/health/>
+- App: <http://localhost:7777>
+- API docs: <http://localhost:7777/api/v1/docs/>
+- Django admin: <http://localhost:7777/admin/>
+- Health check: <http://localhost:7777/health/>
 
 A superuser is auto-created on first boot from `DJANGO_SUPERUSER_EMAIL` /
 `DJANGO_SUPERUSER_PASSWORD` (defaults: `admin@gold7.local` / `admin`).

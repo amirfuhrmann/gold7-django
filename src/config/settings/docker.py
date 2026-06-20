@@ -70,11 +70,11 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)
 # CORS / CSRF
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
-    default=["http://localhost:3000", "http://localhost:8000"],
+    default=["http://localhost:3000", "http://localhost:7777"],
 )
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
-    default=["http://localhost:8000", "http://127.0.0.1:8000"],
+    default=["http://localhost:7777", "http://127.0.0.1:7777"],
 )
 
 # Debug toolbar
