@@ -1,8 +1,18 @@
-"""Profile page: edit ancillary details and change password."""
+"""Profile page: edit ancillary details, picture, and change password."""
+import io
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from PIL import Image
 
 pytestmark = pytest.mark.django_db
+
+
+def _png_upload(name="avatar.png", size=(20, 20)):
+    buf = io.BytesIO()
+    Image.new("RGB", size, "red").save(buf, format="PNG")
+    return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
 
 
 def test_profile_requires_login(client):
@@ -52,6 +62,63 @@ def test_duplicate_phone_rejected(client, user, django_user_model):
     assert b"already in use" in resp.content
     user.refresh_from_db()
     assert user.phone != other.phone
+
+
+def test_upload_profile_picture(client, user, settings, tmp_path):
+    settings.MEDIA_ROOT = str(tmp_path)
+    client.force_login(user)
+    resp = client.post(reverse("core:profile"), {
+        "update_profile": "1",
+        "name": user.name,
+        "email": user.email,
+        "phone": "",
+        "timezone": user.timezone,
+        "preferred_theme": user.preferred_theme,
+        "profile_picture": _png_upload(),
+    })
+    assert resp.status_code == 302
+    user.refresh_from_db()
+    assert user.profile_picture
+    assert str(user.uuid) in user.profile_picture.name
+
+
+def test_reject_non_image_upload(client, user, settings, tmp_path):
+    settings.MEDIA_ROOT = str(tmp_path)
+    client.force_login(user)
+    bad = SimpleUploadedFile("notes.txt", b"not an image", content_type="text/plain")
+    resp = client.post(reverse("core:profile"), {
+        "update_profile": "1",
+        "name": user.name,
+        "email": user.email,
+        "phone": "",
+        "timezone": user.timezone,
+        "preferred_theme": user.preferred_theme,
+        "profile_picture": bad,
+    })
+    assert resp.status_code == 200
+    user.refresh_from_db()
+    assert not user.profile_picture
+
+
+def test_clear_profile_picture(client, user, settings, tmp_path):
+    settings.MEDIA_ROOT = str(tmp_path)
+    user.profile_picture = _png_upload()
+    user.save()
+    assert user.profile_picture
+
+    client.force_login(user)
+    resp = client.post(reverse("core:profile"), {
+        "update_profile": "1",
+        "name": user.name,
+        "email": user.email,
+        "phone": "",
+        "timezone": user.timezone,
+        "preferred_theme": user.preferred_theme,
+        "clear_profile_picture": "on",
+    })
+    assert resp.status_code == 302
+    user.refresh_from_db()
+    assert not user.profile_picture
 
 
 def test_change_password_keeps_user_logged_in(client, user, password):

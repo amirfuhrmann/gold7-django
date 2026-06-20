@@ -30,7 +30,12 @@
         <nav class="flex items-center gap-4 text-sm">
           {% if user.is_superuser %}<a href="/{{ ADMIN_URL }}" target="_blank" rel="noopener" class="text-gray-600 dark:text-gray-300 hover:text-primary">Admin</a>{% endif %}
           <a href="/api/v1/docs/" class="text-gray-600 dark:text-gray-300 hover:text-primary">API</a>
-          <a href="{% url 'core:profile' %}" class="text-gray-600 dark:text-gray-300 hover:text-primary">{{ user.name|default:user.email }}</a>
+          <a href="{% url 'core:profile' %}" class="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary">
+            {% if user.profile_picture %}
+              <img src="{{ user.profile_picture.url }}" alt="" class="h-7 w-7 rounded-full object-cover" />
+            {% endif %}
+            <span>{{ user.name|default:user.email }}</span>
+          </a>
           <a href="{% url 'account:logout' %}" class="btn-primary">Sign out</a>
         </nav>
       </header>

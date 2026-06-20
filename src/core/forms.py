@@ -59,16 +59,49 @@ class AcceptInvitationForm(forms.Form):
 class ProfileForm(forms.ModelForm):
     """Edit ancillary profile details for the signed-in user."""
 
+    clear_profile_picture = forms.BooleanField(required=False, label=_("Remove current photo"))
+
     class Meta:
         model = User
-        fields = ["name", "email", "phone", "timezone", "preferred_theme"]
+        fields = ["profile_picture", "name", "email", "phone", "timezone", "preferred_theme"]
         widgets = {
+            "profile_picture": forms.FileInput(attrs={
+                "class": "block w-full text-sm text-gray-500 file:mr-3 file:rounded-md file:border-0 "
+                         "file:bg-primary file:px-3 file:py-1.5 file:text-white file:cursor-pointer",
+                "accept": "image/jpeg,image/png,image/webp",
+            }),
             "name": forms.TextInput(attrs={"class": "form-input", "placeholder": "Full name"}),
             "email": forms.EmailInput(attrs={"class": "form-input", "placeholder": "you@example.com"}),
             "phone": forms.TextInput(attrs={"class": "form-input", "type": "tel", "placeholder": "+1 555 0100"}),
             "timezone": forms.Select(attrs={"class": "form-input"}),
             "preferred_theme": forms.Select(attrs={"class": "form-input"}),
         }
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get("profile_picture")
+        if picture and hasattr(picture, "size"):
+            if picture.size > 5 * 1024 * 1024:
+                raise forms.ValidationError(_("Image must be under 5 MB."))
+            from PIL import Image
+
+            try:
+                img = Image.open(picture)
+                fmt = (img.format or "").upper()
+                if fmt not in ("JPEG", "MPO", "PNG", "WEBP"):
+                    raise forms.ValidationError(_("Only JPEG, PNG, and WebP images are allowed."))
+                img.verify()
+            except forms.ValidationError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                raise forms.ValidationError(_("Upload a valid image file.")) from exc
+            picture.seek(0)
+        return picture
+
+    def save(self, commit=True):
+        if self.cleaned_data.get("clear_profile_picture") and self.instance.profile_picture:
+            self.instance.profile_picture.delete(save=False)
+            self.instance.profile_picture = ""
+        return super().save(commit=commit)
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").strip()
