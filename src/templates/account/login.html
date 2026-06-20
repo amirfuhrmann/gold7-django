@@ -7,10 +7,14 @@
   <title>Sign in — {{ PLATFORM_NAME }}</title>
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
 </head>
-<body class="h-full bg-gray-100 dark:bg-dark-bg flex items-center justify-center p-4">
-  <div class="w-full max-w-sm rounded-xl bg-white dark:bg-dark-surface shadow-sm border border-gray-200 dark:border-dark-border p-8">
+<body class="h-full bg-cover bg-center bg-no-repeat flex items-center justify-center p-4"
+      style="background-image: url('{% static 'img/login-bg.jpg' %}');">
+  {# Dark overlay for legibility over the photo #}
+  <div class="fixed inset-0 bg-black/40"></div>
+
+  <div class="relative z-10 w-full max-w-sm rounded-xl bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md shadow-2xl border border-white/20 p-8">
     <h1 class="text-xl font-semibold text-center mb-1">{{ PLATFORM_NAME }}</h1>
-    <p class="text-sm text-gray-500 text-center mb-6">Sign in to continue</p>
+    <p class="text-sm text-gray-500 dark:text-gray-300 text-center mb-6">Sign in to continue</p>
 
     {% if error %}
       <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
