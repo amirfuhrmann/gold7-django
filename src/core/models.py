@@ -194,20 +194,34 @@ class User(AbstractUser):
 
 
 class LoginHistory(models.Model):
-    """Records every user login."""
+    """One row per session: when a user logged in and (if known) logged out."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="login_history")
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    timestamp = models.DateTimeField(_("Logged in at"), auto_now_add=True, db_index=True)
+    logged_out_at = models.DateTimeField(_("Logged out at"), null=True, blank=True)
+    session_key = models.CharField(max_length=40, blank=True, default="", db_index=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.CharField(max_length=500, blank=True)
 
     class Meta:
         ordering = ["-timestamp"]
-        verbose_name = "login history"
+        verbose_name = "login record"
         verbose_name_plural = "login history"
 
     def __str__(self):
         return f"{self.user} @ {self.timestamp}"
+
+    @property
+    def duration(self):
+        """Session length, or None if the logout time isn't recorded."""
+        if self.logged_out_at:
+            return self.logged_out_at - self.timestamp
+        return None
+
+    @property
+    def is_active(self) -> bool:
+        """True while no logout has been recorded for this session."""
+        return self.logged_out_at is None
 
 
 class Invitation(models.Model):
